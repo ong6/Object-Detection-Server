@@ -1,95 +1,68 @@
-from logging import debug
-import flask
-from keras.applications import ResNet50
-from keras.preprocessing.image import img_to_array
-from keras.applications import imagenet_utils
-from PIL import Image
-import numpy as np
+import glob
 import io
+import os
+from logging import debug
 
-# For downloading the image.
-import matplotlib.pyplot as plt
-import tempfile
-from six.moves.urllib.request import urlopen
-from six import BytesIO
-
-# For drawing onto the image.
+import flask
 import numpy as np
+from flask import Flask, flash, redirect, render_template, request, url_for
+from keras.applications import ResNet50, imagenet_utils
+from keras.preprocessing.image import img_to_array
 from PIL import Image
-from PIL import ImageColor
-from PIL import ImageDraw
-from PIL import ImageFont
-from PIL import ImageOps
+from werkzeug.utils import secure_filename
 
-# For measuring the inference time.
-import time
+import objectDetection
 
+UPLOAD_FOLDER = 'static/uploads/'
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
+app.secret_key = "secret key"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 model = None
 
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    
 @app.route('/')
-@app.route('/home')
-def hello_world():
-    return flask.render_template('home.html')
+def home():
+    return flask.render_template('upload.html')
 
-def load_model():
-    # load the pre-trained Keras model (here we are using a model
-    # pre-trained on ImageNet and provided by Keras, but you can
-    # substitute in your own networks just as easily)
-    global model
-    model = ResNet50(weights="imagenet")
-
-def prepare_image(image, target):
-    # if the image mode is not RGB, convert it
-    if image.mode != "RGB":
-        image = image.convert("RGB")
-
-    # resize the input image and preprocess it
-    image = image.resize(target)
-    image = img_to_array(image)
-    image = np.expand_dims(image, axis=0)
-    image = imagenet_utils.preprocess_input(image)
-
-    # return the processed image
-    return image
+@app.route('/', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('No image selected for uploading')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        #print('upload_image filename: ' + filename)
+        flash('Image successfully uploaded and displayed below')
+        return render_template('upload.html', filename=filename)
+    else:
+        flash('Allowed image types are -> png, jpg, jpeg')
+        return redirect(request.url)
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    # initialize the data dictionary that will be returned from the
-    # view
-    data = {"success": False}
+@app.route('/display/<filename>')
+def display_image(filename):
+    return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
-    # ensure an image was properly uploaded to our endpoint
-    if flask.request.method == "POST":
-        if flask.request.files.get("image"):
-            # read the image in PIL format
-            image = flask.request.files["image"].read()
-            image = Image.open(io.BytesIO(image))
-
-            # preprocess the image and prepare it for classification
-            image = prepare_image(image, target=(224, 224))
-
-            # classify the input image and then initialize the list
-            # of predictions to return to the client
-            preds = model.predict(image)
-            results = imagenet_utils.decode_predictions(preds)
-            data["predictions"] = []
-
-            # loop over the results and add them to the list of
-            # returned predictions
-            for (imagenetID, label, prob) in results[0]:
-                r = {"label": label, "probability": float(prob)}
-                data["predictions"].append(r)
-
-            # indicate that the request was a success
-            data["success"] = True
-    # return the data dictionary as a JSON response
-    return flask.jsonify(data)
+@app.route('/display')
+def display_modified_image():
+    img = objectDetection.run_detector('static/uploads/' + )
+    img = Image.fromarray(img, "RGB")
+    img.save(os.path.join(app.config['UPLOAD_FOLDER'], 'temp.jpg'))
+    return redirect(url_for('static', filename='uploads/' + 'temp.jpg'), code=301)
 
 if __name__ == '__main__':
     print(("* Loading Keras model and Flask starting server..."
     "please wait until server has fully started"))
-    load_model()
-    app.run(debug=True)
+    app.run()

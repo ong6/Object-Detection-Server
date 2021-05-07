@@ -1,0 +1,26 @@
+body {
+    margin: 0;
+    padding: 0;
+	background-color: white;
+}
+
+.site-title {
+    font-size: 30px;
+    text-align: center;
+}
+
+.content { 
+    text-align: center;
+}
+
+.upload { 
+    text-align: center;
+}
+
+.upload-image-button { 
+    text-align: center;
+    font-size:25px;
+    margin: 5%;
+    border-radius:20px;
+    border: 2px solid;
+}
