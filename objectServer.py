@@ -1,6 +1,8 @@
+from datetime import datetime
 import glob
 import io
 import os
+import time
 from logging import debug
 
 import flask
@@ -42,9 +44,18 @@ def upload_image():
         return redirect(request.url)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
+
+        file_name, file_extension = os.path.splitext(filename)
+        now = datetime.now().strftime('%H%M%S')
+        filename = file_name + now + file_extension
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        #print('upload_image filename: ' + filename)
+
+        img, time_taken = objectDetection.run_detector('static/uploads/' + filename)
+        img = Image.fromarray(img, "RGB")
+        new_filename = 'temp.jpg'
+        img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         flash('Image successfully uploaded and displayed below')
+        flash('Time taken = ' + str(time_taken))
         return render_template('upload.html', filename=filename)
     else:
         flash('Allowed image types are -> png, jpg, jpeg')
@@ -55,12 +66,9 @@ def upload_image():
 def display_image(filename):
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
-@app.route('/display')
-def display_modified_image():
-    img = objectDetection.run_detector('static/uploads/' + )
-    img = Image.fromarray(img, "RGB")
-    img.save(os.path.join(app.config['UPLOAD_FOLDER'], 'temp.jpg'))
-    return redirect(url_for('static', filename='uploads/' + 'temp.jpg'), code=301)
+# @app.route('/display/temp.jpg')
+# def display_modified_image():
+#     return redirect(url_for('static', filename='uploads/' + 'temp.jpg'), code=301)
 
 if __name__ == '__main__':
     print(("* Loading Keras model and Flask starting server..."

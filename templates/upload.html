@@ -5,10 +5,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Object Detection Model</title>
 
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Oswald&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: "Sofia", sans-serif;
+		}
+	</style>
 	<link
 		rel="stylesheet"
 		type="text/css"
-		href="{{ url_for('static', filename='home.css') }}"
+		href="{{ url_for('static', filename='upload.css') }}"
 	/>
 
 	<link
@@ -16,40 +23,33 @@
 		href="{{ url_for('static', filename='favicon.ico') }}"
 	/>
 </head>
-<div class="content">
-	<h1 class='site-title'>Object Detection Model</h1>
-	<h2 class='upload'>Select a file to upload</h2>
-	<p>
-		{% with messages = get_flashed_messages() %}
-		{% if messages %}
-			<ul>
-			{% for message in messages %}
-			<li>{{ message }}</li>
-			{% endfor %}
-			</ul>
-		{% endif %}
-		{% endwith %}
-	</p>
-	<div class="container">
-		{% if filename %}
-			<div>
-				<img src="{{ url_for('display_image', filename=filename) }}">
-			</div>
-		{% endif %}
-		<form method="post" action="/" enctype="multipart/form-data">
-			<dl>
-				<p>
-					<input type="file" name="file" autocomplete="off" required>
-				</p>
-			</dl>
+<h1 class='site-title'>Object Detection Model</h1>
+<h2 class='site-upload'>Select a file to upload</h2>
+<p class='site-message'>
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+		<ul class='site-message'>
+		{% for message in messages %}
+		<span class='site-message'>{{ message }}</span><br />
+		{% endfor %}
+		</ul>
+	{% endif %}
+	{% endwith %}
+</p>
+<div class="container">
+	{% if filename %}
+		<div>
+			<img src="{{ url_for('display_image', filename=filename) }}">
+		</div>
+	{% endif %}
+	<form method="post" action="/" enctype="multipart/form-data">
+		<dl>
 			<p>
-				<input type="submit" value="Submit">
+				<input type="file" name="file" autocomplete="off" required>
 			</p>
-		</form>
-		{% if filename %}
-			<div>
-				<img src="{{ url_for('display_modified_image') }}">
-			</div>
-		{% endif %}
-	</div>
+		</dl>
+		<p>
+			<input type="submit" value="Submit">
+		</p>
+	</form>
 </div>

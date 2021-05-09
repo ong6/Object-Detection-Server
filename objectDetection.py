@@ -115,11 +115,13 @@ def run_detector(path):
 
   result = {key:value.numpy() for key,value in result.items()}
 
+  inference_time =  end_time-start_time
   print("Found %d objects." % len(result["detection_scores"]))
-  print("Inference time: ", end_time-start_time)
+  print("Inference time: ", inference_time)
 
   image_with_boxes = draw_boxes(
       img.numpy(), result["detection_boxes"],
       result["detection_class_entities"], result["detection_scores"])
-  return image_with_boxes
+
+  return image_with_boxes, inference_time
 
