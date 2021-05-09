@@ -13,6 +13,7 @@ Implemented with a Client-Server Architecture
 - Ensure that relevant dependencies that are needed are installed such as flask, numpy, pillow, matplotlib and tensorflow_hub.
 - Start the server by running `python objectServer.py`
 - Navigate to frontend by going to "http://127.0.0.1:5000/"
+- The first image may take more time than the rest as it will have to load the model first.
 
 ### User Guide
 
